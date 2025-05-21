@@ -6,16 +6,29 @@ const Main = () => {
  const [items, setItems] = useState([])
  const [selectedMeal, setSelectedMeal] = useState(null)
  const [recipe, setRecipe] = useState(null)
+ const [currentCategory, setCurrentCategory] = useState('')
+
+ const fetchRandomCategory = async () => {
+  try {
+    // First get all categories
+    const categoriesResponse = await axios.get('https://www.themealdb.com/api/json/v1/1/categories.php')
+    const categories = categoriesResponse.data.categories
+    
+    // Randomly select a category
+    const randomCategory = categories[Math.floor(Math.random() * categories.length)]
+    setCurrentCategory(randomCategory.strCategory)
+    
+    // Fetch meals from the selected category
+    const mealsResponse = await axios.get(`https://www.themealdb.com/api/json/v1/1/filter.php?c=${randomCategory.strCategory}`)
+    setItems(mealsResponse.data.meals)
+  } catch (err) {
+    console.log(err)
+  }
+ }
 
  useEffect(() => {
-  axios.get('https://www.themealdb.com/api/json/v1/1/filter.php?c=Seafood')
-  .then(res => {
-    setItems(res.data.meals)
-  })
-  .catch((err) => {
-    console.log(err)
-  })
- },[]);
+  fetchRandomCategory()
+ }, [])
 
  const handleMealClick = async (idMeal) => {
   try {
@@ -50,6 +63,12 @@ const Main = () => {
 
  return (
   <div className="main-container">
+    <div className="header">
+      <h2>Current Category: {currentCategory}</h2>
+      <button className="refresh-button" onClick={fetchRandomCategory}>
+        Get New Recipes
+      </button>
+    </div>
     <div className="items-container">{itemsList}</div>
     {selectedMeal && recipe && (
       <div className="recipe-modal">
